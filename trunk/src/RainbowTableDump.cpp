@@ -53,7 +53,13 @@ int main(int argc, char* argv[])
 		{
 			cwc.IndexToPlain();
 			cwc.PlainToHash();
-			printf("#%-4d  %s  %s  %s\n", nPos,
+			if (cwc.GetHashRoutineName() == "crypt") {
+				printf("#%-4d  %s  %s  %s\n", nPos,
+										  uint64tohexstr(cwc.GetIndex()).c_str(),
+										  cwc.GetPlainBinary().c_str(),
+										  cwc.GetHashStr().c_str());
+			} else
+				printf("#%-4d  %s  %s  %s\n", nPos,
 										  uint64tohexstr(cwc.GetIndex()).c_str(),
 										  cwc.GetPlainBinary().c_str(),
 										  cwc.GetHash().c_str());
