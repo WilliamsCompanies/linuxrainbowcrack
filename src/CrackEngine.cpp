@@ -87,13 +87,16 @@ bool CCrackEngine::CheckAlarm(RainbowChain* pChain, int nGuessedPos, unsigned ch
 	}
 	cwc.IndexToPlain();
 	cwc.PlainToHash();
+	
 	if (cwc.CheckHash(pHash))
 	{
+		if (cwc.GetHashRoutineName() == "crypt")
+			printf("plaintext of %s is %s\n", cwc.GetHashStr().c_str(),cwc.GetPlain().substr(2,8).c_str());
 		printf("plaintext of %s is %s\n", cwc.GetHash().c_str(), cwc.GetPlain().c_str());
 		hs.SetPlain(cwc.GetHash(), cwc.GetPlain(), cwc.GetBinary());
 		return true;
 	}
-
+	printf("Alarm of %s is %s\n", cwc.GetHashStr().c_str(),cwc.GetPlain().substr(2,8).c_str());
 	return false;
 }
 
@@ -273,7 +276,7 @@ void CCrackEngine::SearchRainbowTable(string sPathName, CHashSet& hs)
 						if (cwc.GetIndex() != pChain[nIndexToVerify].nIndexE)
 						{
 							printf("rainbow chain length verify fail\n");
-							break;
+							//break;
 						}
 
 						// Chain sort test

@@ -5,7 +5,8 @@
 */
 
 #include "HashAlgorithm.h"
-
+#include <unistd.h>
+#include <string.h>
 #include <openssl/des.h>
 #include <openssl/md5.h>
 #include <openssl/sha.h>
@@ -13,6 +14,16 @@
 	#pragma comment(lib, "libeay32.lib")
 #endif
 
+void HashCrypt(unsigned char* pPlain, int nPlainLen, unsigned char* pHash)
+{
+    unsigned char *realPlain;
+    unsigned char realSalt[2];
+    realSalt[0] = pPlain[0];
+    realSalt[1] = pPlain[1];
+    realPlain = pPlain;
+    realPlain += 2;
+    memcpy(pHash, DES_crypt((const char*)realPlain, (const char*)realSalt), 13);
+}
 void setup_des_key(unsigned char key_56[], des_key_schedule &ks)
 {
 	des_cblock key;

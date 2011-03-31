@@ -425,12 +425,18 @@ void CChainWalkContext::IndexToPlain()
 							 );
 #endif
 		m_Plain[i] = m_PlainCharset[nTemp];
+		if (m_sHashRoutineName == "crypt") {
+			unsigned char salt[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/.";
+			m_Plain[0] = salt[m_Plain[0] & 0x3f];
+			m_Plain[1] = salt[m_Plain[1] & 0x3f];
+		}
 	}
 }
 
 void CChainWalkContext::PlainToHash()
 {
 	m_pHashRoutine(m_Plain, m_nPlainLen, m_Hash);
+	//printf("%s:%s(%d)\n",m_Hash, m_Plain, m_nPlainLen);
 }
 
 void CChainWalkContext::HashToIndex(int nPos)
@@ -467,13 +473,16 @@ string CChainWalkContext::GetBinary()
 string CChainWalkContext::GetPlainBinary()
 {
 	string sRet;
-	sRet += GetPlain();
+	if (m_sHashRoutineName == "crypt")
+		sRet += GetPlain().substr(2,8);
+	else
+		sRet += GetPlain();
 	int i;
 	for (i = 0; i < m_nPlainLenMax - m_nPlainLen; i++)
 		sRet += ' ';
 
 	sRet += "|";
-
+	
 	sRet += GetBinary();
 	for (i = 0; i < m_nPlainLenMax - m_nPlainLen; i++)
 		sRet += "  ";
@@ -485,11 +494,20 @@ string CChainWalkContext::GetHash()
 {
 	return HexToStr(m_Hash, m_nHashLen);
 }
-
+string CChainWalkContext::GetHashStr()
+{
+    string sRet;
+    int i;
+    for (i = 0; i < MAX_HASH_LEN && i < 13; i++)
+	{    
+        sRet += m_Hash[i];
+	}
+    return sRet;
+}
 bool CChainWalkContext::CheckHash(unsigned char* pHash)
 {
 	if (memcmp(m_Hash, pHash, m_nHashLen) == 0)
 		return true;
-
+	printf("%s is not %s\n",m_Hash,pHash);
 	return false;
 }

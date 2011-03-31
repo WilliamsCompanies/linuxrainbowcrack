@@ -70,6 +70,7 @@ public:
 	string GetBinary();
 	string GetPlainBinary();
 	string GetHash();
+    string GetHashStr(); /* DJS */
 	bool CheckHash(unsigned char* pHash);	// The length should be m_nHashLen
 };
 

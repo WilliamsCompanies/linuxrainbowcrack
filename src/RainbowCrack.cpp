@@ -75,7 +75,11 @@ void GetTableList(int argc, char* argv[], vector<string>& vPathName)
 bool NormalizeHash(string& sHash)
 {
 	string sNormalizedHash = sHash;
-
+	if (sHash.length() == 13) {
+		sNormalizedHash = HexToStr((unsigned char *)sHash.c_str(), 13);
+		sHash = sNormalizedHash;
+		return true;
+	}
 	if (   sNormalizedHash.size() % 2 != 0
 		|| sNormalizedHash.size() < MIN_HASH_LEN * 2
 		|| sNormalizedHash.size() > MAX_HASH_LEN * 2)
@@ -346,7 +350,14 @@ int main(int argc, char* argv[])
 				sBinary = "<notfound>";
 			}
 
-			printf("%s  %s  hex:%s\n", vHash[i].c_str(), sPlain.c_str(), sBinary.c_str());
+			if (vHash[i].length() == 26) {
+				int t;
+				unsigned char pHash[14];
+				ParseHash(vHash[i], pHash, t);
+				pHash[13] = '\0';
+				printf("%s  %s hex:%s\n", pHash, sPlain.substr(2,8).c_str(), sBinary.c_str());
+			} else
+				printf("%s  %s  hex:%s\n", vHash[i].c_str(), sPlain.c_str(), sBinary.c_str());
 		}
 	}
 	else
