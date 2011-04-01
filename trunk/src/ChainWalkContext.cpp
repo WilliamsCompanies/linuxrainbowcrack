@@ -508,6 +508,6 @@ bool CChainWalkContext::CheckHash(unsigned char* pHash)
 {
 	if (memcmp(m_Hash, pHash, m_nHashLen) == 0)
 		return true;
-	printf("%s is not %s\n",m_Hash,pHash);
+	printf("%s is not %s\r",m_Hash,pHash);
 	return false;
 }
