@@ -161,7 +161,7 @@ int main(int argc, char* argv[])
 #ifdef _WIN32
 	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
 #else
-	nice(19);
+	nice(1);
 #endif
 
 	// FileName
@@ -238,15 +238,17 @@ int main(int argc, char* argv[])
 			int secondsleft=cl*nSecond;
 			//printf("Chains left : %d\nCL : %ld\n",chainsleft,cl);
 			int hrleft = secondsleft/3600;
-			int mleft = (secondsleft/60)-(hrleft*60);
-			int sleft = secondsleft-(mleft*60)-(hrleft*3600);
+			int dleft = hrleft/24;
+			hrleft=hrleft-(dleft*24);
+			int mleft = (secondsleft/60)-(hrleft*60)-(dleft*24*60);
+			int sleft = secondsleft-(mleft*60)-(hrleft*3600)-(dleft*24*3600);
 			//printf("hms: %d,%d,%d - %d\n",hrleft,mleft,sleft,secondsleft);
-			printf("%d of %d rainbow chains generated (%d m %d s) -> %d%%  ETA: %d hrs %d mins %d sec\n", i + 1,
+			printf("%d of %d rainbow chains generated (%d m %d s) -> %2f%%  ETA: %d days %d hrs %d mins %d sec\n", i + 1,
 																	  nRainbowChainCount,
 																	  nSecond / 60,
 																	  nSecond % 60,
 																	  (((i+1)*100)/nRainbowChainCount),
-																	  hrleft,mleft,sleft);
+																	  dleft,hrleft,mleft,sleft);
 			t1 = clock();
 		}
 		
