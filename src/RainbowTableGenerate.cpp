@@ -234,12 +234,14 @@ int main(int argc, char* argv[])
 			clock_t t2 = clock();
 			int nSecond = (t2 - t1) / CLOCKS_PER_SEC;
 			int chainsleft = nRainbowChainCount - (i+1);
-			int cl = chainsleft/(i+1);
-			int secondsleft=cl/(100000/nSecond);
-			int hrleft = (secondsleft%60)%60;
-			int mleft = (secondsleft%60)-(hrleft*60);
+			int cl = chainsleft/100000 ;
+			int secondsleft=cl*nSecond;
+			//printf("Chains left : %d\nCL : %ld\n",chainsleft,cl);
+			int hrleft = secondsleft/3600;
+			int mleft = (secondsleft/60)-(hrleft*60);
 			int sleft = secondsleft-(mleft*60)-(hrleft*3600);
-			printf("%d of %d rainbow chains generated (%d m %d s) -> %d\% ETA: %d hr %d m %d s\n", i + 1,
+			//printf("hms: %d,%d,%d - %d\n",hrleft,mleft,sleft,secondsleft);
+			printf("%d of %d rainbow chains generated (%d m %d s) -> %d%%  ETA: %d hrs %d mins %d sec\n", i + 1,
 																	  nRainbowChainCount,
 																	  nSecond / 60,
 																	  nSecond % 60,

@@ -92,11 +92,12 @@ bool CCrackEngine::CheckAlarm(RainbowChain* pChain, int nGuessedPos, unsigned ch
 	{
 		if (cwc.GetHashRoutineName() == "crypt")
 			printf("plaintext of %s is %s\n", cwc.GetHashStr().c_str(),cwc.GetPlain().substr(2,8).c_str());
-		printf("plaintext of %s is %s\n", cwc.GetHash().c_str(), cwc.GetPlain().c_str());
+		else
+			printf("plaintext of %s is %s\n", cwc.GetHash().c_str(), cwc.GetPlain().c_str());
 		hs.SetPlain(cwc.GetHash(), cwc.GetPlain(), cwc.GetBinary());
 		return true;
 	}
-	printf("Alarm of %s is %s\n", cwc.GetHashStr().c_str(),cwc.GetPlain().substr(2,8).c_str());
+	printf("Alarm of %s is %s\r", cwc.GetHashStr().c_str(),cwc.GetPlain().substr(2,8).c_str());
 	return false;
 }
 
@@ -275,8 +276,11 @@ void CCrackEngine::SearchRainbowTable(string sPathName, CHashSet& hs)
 						}
 						if (cwc.GetIndex() != pChain[nIndexToVerify].nIndexE)
 						{
-							printf("rainbow chain length verify fail\n");
-							//break;
+							if (cwc.GetHashRoutineName() == "crypt") {
+							}else{
+								printf("rainbow chain length verify fail\n");
+								break;
+							}
 						}
 
 						// Chain sort test
@@ -300,7 +304,7 @@ void CCrackEngine::SearchRainbowTable(string sPathName, CHashSet& hs)
 					SearchTableChunk(pChain, nRainbowChainLen, nRainbowChainCountRead, hs);
 					t2 = clock();
 					fTime = 1.0f * (t2 - t1) / CLOCKS_PER_SEC;
-					printf("cryptanalysis time: %.2f s\n", fTime);
+					printf("cryptanalysis time: %.2f s                                      \n", fTime);
 					m_fTotalCryptanalysisTime += fTime;
 
 					// Already finished?

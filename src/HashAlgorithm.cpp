@@ -21,7 +21,7 @@ void HashCrypt(unsigned char* pPlain, int nPlainLen, unsigned char* pHash)
     realSalt[0] = pPlain[0];
     realSalt[1] = pPlain[1];
     realPlain = pPlain;
-    realPlain += 2;
+    //realPlain += 2;
     memcpy(pHash, DES_crypt((const char*)realPlain, (const char*)realSalt), 13);
 }
 void setup_des_key(unsigned char key_56[], des_key_schedule &ks)

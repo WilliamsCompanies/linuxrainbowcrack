@@ -355,7 +355,10 @@ int main(int argc, char* argv[])
 				unsigned char pHash[14];
 				ParseHash(vHash[i], pHash, t);
 				pHash[13] = '\0';
-				printf("%s  %s hex:%s\n", pHash, sPlain.substr(2,8).c_str(), sBinary.c_str());
+				if(sPlain  == "<notfound>")
+					printf("%s  %s hex:%s\n", pHash, sPlain.c_str(), sBinary.c_str());
+				else
+					printf("%s  %s hex:%s\n", pHash, sPlain.substr(2,8).c_str(), sBinary.c_str());
 			} else
 				printf("%s  %s  hex:%s\n", vHash[i].c_str(), sPlain.c_str(), sBinary.c_str());
 		}
