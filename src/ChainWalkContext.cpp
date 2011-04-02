@@ -149,6 +149,10 @@ bool CChainWalkContext::SetHashRoutine(string sHashRoutineName)
 bool CChainWalkContext::SetPlainCharset(string sCharsetName, int nPlainLenMin, int nPlainLenMax)
 {
 	// m_PlainCharset, m_nPlainCharsetLen, m_sPlainCharsetName, m_sPlainCharsetContent
+	if (m_sHashRoutineName == "crypt"){
+		nPlainLenMin+=2;
+		nPlainLenMax+=2;
+	}
 	if (!LoadCharset(sCharsetName))
 		return false;
 
@@ -425,12 +429,13 @@ void CChainWalkContext::IndexToPlain()
 							 );
 #endif
 		m_Plain[i] = m_PlainCharset[nTemp];
-		if (m_sHashRoutineName == "crypt") {
-			unsigned char salt[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/.";
-			m_Plain[0] = salt[m_Plain[0] & 0x3f];
-			m_Plain[1] = salt[m_Plain[1] & 0x3f];
-		}
 	}
+	/*
+	if (m_sHashRoutineName == "crypt") {
+		unsigned char salt[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789/.";
+		m_Plain[0] = salt[m_Plain[0] & 0x3f];
+		m_Plain[1] = salt[m_Plain[1] & 0x3f];
+	}*/
 }
 
 void CChainWalkContext::PlainToHash()
@@ -482,8 +487,10 @@ string CChainWalkContext::GetPlainBinary()
 		sRet += ' ';
 
 	sRet += "|";
-	
-	sRet += GetBinary();
+	if (m_sHashRoutineName == "crypt")
+		sRet += GetBinary().substr(4,16);
+	else
+		sRet += GetBinary();
 	for (i = 0; i < m_nPlainLenMax - m_nPlainLen; i++)
 		sRet += "  ";
 
@@ -508,6 +515,6 @@ bool CChainWalkContext::CheckHash(unsigned char* pHash)
 {
 	if (memcmp(m_Hash, pHash, m_nHashLen) == 0)
 		return true;
-	printf("%s is not %s\r",m_Hash,pHash);
+	fprintf(stderr,"%s is not %s\r",m_Hash,pHash);
 	return false;
 }

@@ -97,7 +97,8 @@ bool CCrackEngine::CheckAlarm(RainbowChain* pChain, int nGuessedPos, unsigned ch
 		hs.SetPlain(cwc.GetHash(), cwc.GetPlain(), cwc.GetBinary());
 		return true;
 	}
-	printf("Alarm of %s is %s\r", cwc.GetHashStr().c_str(),cwc.GetPlain().substr(2,8).c_str());
+	//fprintf(stderr,"Alarm of %s is %s\r", cwc.GetHashStr().c_str(),cwc.GetPlain().substr(2,8).c_str());
+	//fprintf(stderr,"Alarm of %s is %s\r", pHash,cwc.GetHashStr().c_str());
 	return false;
 }
 
@@ -118,6 +119,7 @@ void CCrackEngine::SearchTableChunk(RainbowChain* pChain, int nRainbowChainLen, 
 		unsigned char TargetHash[MAX_HASH_LEN];
 		int nHashLen;
 		ParseHash(vHash[nHashIndex], TargetHash, nHashLen);
+		fprintf(stderr,"Trying hash number %d of %d (%d%%)                         \r",nHashIndex,vHash.size(),((nHashIndex*100)/vHash.size()));
 		if (nHashLen != CChainWalkContext::GetHashLen())
 			printf("debug: nHashLen mismatch\n");
 
