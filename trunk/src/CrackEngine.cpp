@@ -114,6 +114,8 @@ void CCrackEngine::SearchTableChunk(RainbowChain* pChain, int nRainbowChainLen, 
 	int nChainWalkStepDueToFalseAlarm = 0;
 
 	int nHashIndex;
+	
+	//search hash by hash
 	for (nHashIndex = 0; nHashIndex < vHash.size(); nHashIndex++)
 	{
 		unsigned char TargetHash[MAX_HASH_LEN];
@@ -134,33 +136,40 @@ void CCrackEngine::SearchTableChunk(RainbowChain* pChain, int nRainbowChainLen, 
 													CChainWalkContext::GetRainbowTableIndex(),
 													nRainbowChainLen,
 													fNewlyGenerated);
-		//printf("debug: using %s walk for %s\n", fNewlyGenerated ? "newly generated" : "existing",
-		//										vHash[nHashIndex].c_str());
+		//printf("debug: using %s walk for %s on %u\n", fNewlyGenerated ? "newly generated" : "existing",
+		//										vHash[nHashIndex].c_str(),pStartPosIndexE);
 
 		// Walk
 		int nPos;
 		for (nPos = nRainbowChainLen - 2; nPos >= 0; nPos--)
 		{
+			
 			if (fNewlyGenerated)
 			{
 				CChainWalkContext cwc;
 				cwc.SetHash(TargetHash);
 				cwc.HashToIndex(nPos);
 				int i;
+				
+				//Start of long looop
 				for (i = nPos + 1; i <= nRainbowChainLen - 2; i++)
 				{
+					
 					cwc.IndexToPlain();
 					cwc.PlainToHash();
 					cwc.HashToIndex(i);
 				}
-
+				//end of long loop
+				//fprintf(stderr,"Using %d, %d, diff=%u\r",nPos,nRainbowChainLen,cwc.GetIndex()-pStartPosIndexE[nPos]);
 				pStartPosIndexE[nPos] = cwc.GetIndex();
 				nChainWalkStep += nRainbowChainLen - 2 - nPos;
 			}
-			uint64 nIndexEOfCurPos = pStartPosIndexE[nPos];
 
+			uint64 nIndexEOfCurPos = pStartPosIndexE[nPos];
+			//fprintf(stderr,"nPos:%d, %u\r",nPos,nIndexEOfCurPos);
 			// Search matching nIndexE
 			int nMatchingIndexE = BinarySearch(pChain, nRainbowChainCount, nIndexEOfCurPos);
+			
 			if (nMatchingIndexE != -1)
 			{
 				int nMatchingIndexEFrom, nMatchingIndexETo;
@@ -170,6 +179,7 @@ void CCrackEngine::SearchTableChunk(RainbowChain* pChain, int nRainbowChainLen, 
 				int i;
 				for (i = nMatchingIndexEFrom; i <= nMatchingIndexETo; i++)
 				{
+					
 					if (CheckAlarm(pChain + i, nPos, TargetHash, hs))
 					{
 						//printf("debug: discarding walk for %s\n", vHash[nHashIndex].c_str());
@@ -278,11 +288,11 @@ void CCrackEngine::SearchRainbowTable(string sPathName, CHashSet& hs)
 						}
 						if (cwc.GetIndex() != pChain[nIndexToVerify].nIndexE)
 						{
-							if (cwc.GetHashRoutineName() == "crypt") {
-							}else{
+							//if (cwc.GetHashRoutineName() == "crypt") {
+							//}else{
 								printf("rainbow chain length verify fail\n");
 								break;
-							}
+							//}
 						}
 
 						// Chain sort test

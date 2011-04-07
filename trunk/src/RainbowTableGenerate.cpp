@@ -14,13 +14,18 @@
 	#include <unistd.h>
 #endif
 #include <time.h>
-
+#include <pthread.h>
+//detect multicore systems
+int numCPU = sysconf( _SC_NPROCESSORS_ONLN );
 #include "ChainWalkContext.h"
-
+void* RunMulticore();
+FILE* file;
+CChainWalkContext cwc;
+int nRainbowChainLen;
 void Usage()
 {
 	Logo();
-
+	printf("Number of cores: %d\n",numCPU);
 	printf("usage: rtgen hash_algorithm \\\n");
 	printf("             plain_charset plain_len_min plain_len_max \\\n");
 	printf("             rainbow_table_index \\\n");
@@ -108,6 +113,9 @@ void Bench(string sHashRoutineName, string sCharsetName, int nPlainLenMin, int n
 
 int main(int argc, char* argv[])
 {
+	string sHashRoutineName,sCharsetName,sFileTitleSuffix;
+	int nPlainLenMin,nPlainLenMax,nRainbowTableIndex,nRainbowChainCount;
+	//printf("argc:%d\n",argc);
 	if (argc == 7)
 	{
 		if (strcmp(argv[6], "-bench") == 0)
@@ -117,22 +125,59 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	if (argc != 9)
+	if (argc != 9 && argc != 2)
 	{
 		Usage();
 		return 0;
 	}
+	pthread_t thread1, thread2, thread3, thread4;
+	int iret1,iret2,iret3,iret4;
+	char * pch;
+	if(argc==2){
+		pch = strtok (argv[1],"_");
+		//printf("Routinename:%s\n",pch);
+		sHashRoutineName  = pch;					//Algorith type e.g md5
+		
+		pch = strtok (NULL, "#");
+		//printf("charset:%s\n",pch);
+		sCharsetName      = pch;					//charset name
+		
+		pch = strtok(NULL,"-");
+		//printf("min:%s\n",pch);
+		nPlainLenMin         = atoi(pch);			//minimum length
+		
+		pch = strtok(NULL,"_");
+		//printf("max:%s\n",pch);
+		nPlainLenMax         = atoi(pch);			//maximum length
+		
+		pch = strtok(NULL,"_");
+		//printf("index:%s\n",pch);
+		nRainbowTableIndex   = atoi(pch);			//table index
+		
+		pch = strtok(NULL,"x");
+		//printf("chainlen:%s\n",pch);
+		nRainbowChainLen     = atoi(pch);	 			//chain length
+		
+		pch = strtok(NULL,"_");
+		//printf("chaincount:%s\n",pch);
+		nRainbowChainCount   = atoi(pch);			//chain count
+		
+		pch = strtok(NULL,"_.");
+		//printf("suffix:%s\n",pch);
+		sFileTitleSuffix  = pch;			//suffix
+		//return 0;
 
-	string sHashRoutineName  = argv[1];			//Algorith type e.g md5
-	string sCharsetName      = argv[2];			//charset name
-	int nPlainLenMin         = atoi(argv[3]);	//minimum length
-	int nPlainLenMax         = atoi(argv[4]);	//maximum length
-	int nRainbowTableIndex   = atoi(argv[5]);	//table index
+	}else{
+		sHashRoutineName  = argv[1];			//Algorith type e.g md5
+		sCharsetName      = argv[2];			//charset name
+		nPlainLenMin         = atoi(argv[3]);	//minimum length
+		nPlainLenMax         = atoi(argv[4]);	//maximum length
+		nRainbowTableIndex   = atoi(argv[5]);	//table index
 
-	int nRainbowChainLen     = atoi(argv[6]);	//chain length
-	int nRainbowChainCount   = atoi(argv[7]);	//chain count
-	string sFileTitleSuffix  = argv[8];			//suffix
-
+		nRainbowChainLen     = atoi(argv[6]);	//chain length
+		nRainbowChainCount   = atoi(argv[7]);	//chain count
+		sFileTitleSuffix  = argv[8];			//suffix
+	}
 	// nRainbowChainCount check
 	if (nRainbowChainCount >= 134217728)		//make sure that chain count is correct to avoid big rt's
 	{
@@ -177,7 +222,7 @@ int main(int argc, char* argv[])
 
 	// Open file
 	fclose(fopen(szFileName, "a"));				//create the file
-	FILE* file = fopen(szFileName, "r+b");		//open the file for reading in binary
+	file = fopen(szFileName, "r+b");		//open the file for reading in binary
 	if (file == NULL)	//check to see if we opened the file correctly
 	{
 		printf("failed to create %s\n", szFileName);
@@ -194,56 +239,59 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 	if (nDataLen > 0)
-		printf("continuing from interrupted precomputation...\n");
+		printf("continuing from interrupted precomputation %d...\n",nDataLen/16);
 	fseek(file, nDataLen, SEEK_SET);
 
 	// Generate rainbow table
 	printf("generating...\n");
-	CChainWalkContext cwc;
+	
 	clock_t t1 = clock();
 	int i;
 	for (i = nDataLen / 16; i < nRainbowChainCount; i++)
 	{
-		
-		cwc.GenerateRandomIndex();
-		uint64 nIndex = cwc.GetIndex();							// get index
-		if (fwrite(&nIndex, 1, 8, file) != 8)
-		{
-			printf("disk write fail\n");
-			break;
-		}
-
-		int nPos;
-		for (nPos = 0; nPos < nRainbowChainLen - 1; nPos++)		//generate a chain
-		{
-			cwc.IndexToPlain();
-			cwc.PlainToHash();
-			cwc.HashToIndex(nPos);
-		}
-
-		nIndex = cwc.GetIndex();								//get new index
-		if (fwrite(&nIndex, 1, 8, file) != 8)
-		{
-			printf("disk write fail\n");
-			break;
-		}
-
+		//start to try and run a multithreaded
+		RunMulticore();
+		/*
+		switch(numCPU){
+			case 1:
+				iret1 = pthread_create(&thread1,NULL,&RunMulticore,0);
+			case 2:
+				iret1 = pthread_create(&thread1,NULL,&RunMulticore,NULL);
+				iret2 = pthread_create(&thread2,NULL,&RunMulticore,NULL);
+			case 3:
+				iret1 = pthread_create(&thread1,NULL,&RunMulticore,NULL);
+				iret2 = pthread_create(&thread2,NULL,&RunMulticore,NULL);
+				iret3 = pthread_create(&thread3,NULL,&RunMulticore,NULL);
+			case 4:
+				iret1 = pthread_create(&thread1,NULL,&RunMulticore,NULL);
+				iret2 = pthread_create(&thread2,NULL,&RunMulticore,NULL);
+				iret3 = pthread_create(&thread3,NULL,&RunMulticore,NULL);
+				iret4 = pthread_create(&thread4,NULL,&RunMulticore,NULL);
+			}
+		*/
+		//end
 		//Display status
 		if ((i + 1) % 100000 == 0 || i + 1 == nRainbowChainCount)
 		{
 			clock_t t2 = clock();
-			int nSecond = (t2 - t1) / CLOCKS_PER_SEC;
-			int chainsleft = nRainbowChainCount - (i+1);
-			int cl = chainsleft/100000 ;
-			int secondsleft=cl*nSecond;
+			int nSecond = (t2 - t1) / CLOCKS_PER_SEC;					//87
+			int chainsleft = nRainbowChainCount - (i+1);				//33454432
+			int cl = chainsleft/100000 ;								//334
+			int secondsleft=cl*nSecond;									//29058
 			//printf("Chains left : %d\nCL : %ld\n",chainsleft,cl);
-			int hrleft = secondsleft/3600;
-			int dleft = hrleft/24;
-			hrleft=hrleft-(dleft*24);
-			int mleft = (secondsleft/60)-(hrleft*60)-(dleft*24*60);
-			int sleft = secondsleft-(mleft*60)-(hrleft*3600)-(dleft*24*3600);
-			//printf("hms: %d,%d,%d - %d\n",hrleft,mleft,sleft,secondsleft);
-			printf("%d of %d rainbow chains generated (%d m %d s) -> %2f%%  ETA: %d days %d hrs %d mins %d sec\n", i + 1,
+			//eg 51437
+			int hrleft = secondsleft/3600; 								//8
+			
+			int dleft = hrleft/24;										//0
+			
+			hrleft=hrleft-(dleft*24);									//8
+			
+			int mleft = (secondsleft/60)-(hrleft*60)-(dleft*24*60);		//4
+			
+			int sleft = secondsleft-(mleft*60)-(hrleft*3600)-(dleft*24*3600); //18
+			
+			//printf("dhms: %d,%d,%d,%d - %d\n",dleft,hrleft,mleft,sleft,secondsleft);
+			printf("%d of %d rainbow chains generated (%d m %d s) -> %d%%  ETA: %d days %d hrs %d mins %d sec\n", i + 1,
 																	  nRainbowChainCount,
 																	  nSecond / 60,
 																	  nSecond % 60,
@@ -258,4 +306,29 @@ int main(int argc, char* argv[])
 	fclose(file);
 
 	return 0;
+}
+void* RunMulticore(){
+	cwc.GenerateRandomIndex();
+	uint64 nIndex = cwc.GetIndex();							// get index
+	if (fwrite(&nIndex, 1, 8, file) != 8)
+	{
+		printf("disk write fail\n");
+		goto ENDTHREAD;
+	}
+
+	int nPos;
+	for (nPos = 0; nPos < nRainbowChainLen - 1; nPos++)		//generate a chain
+	{
+		cwc.IndexToPlain();
+		cwc.PlainToHash();
+		cwc.HashToIndex(nPos);
+	}
+
+	nIndex = cwc.GetIndex();								//get new index
+	if (fwrite(&nIndex, 1, 8, file) != 8)
+	{
+		printf("disk write fail\n");
+		goto ENDTHREAD;
+	}
+	ENDTHREAD:;
 }
