@@ -63,24 +63,44 @@ bool ReadLinesFromFile(string sPathName, vector<string>& vLine)
 		string content = data;
 		content += "\n";
 		delete data;
-
+		//printf("Parsing\n");
 		int i;
+		int nRead=0;
 		for (i = 0; i < content.size(); i++)
 		{
 			if (content[i] == '\r')
 				content[i] = '\n';
+			/*	
+			if(content[i] == '\n'){
+				nRead++;
+				int n=i;
+				string line = content.substr(0, n);
+				line = TrimString(line);
+				fprintf(stderr,"%d        \r",nRead);
+				if (line != "")
+					vLine.push_back(line);
+				content = content.substr(n + 1);
+				i=0;
+			}*/
 		}
 
 		int n;
-		while ((n = content.find("\n", 0)) != -1)
+		
+		
+		while ((n = content.find("\n", 0)) != -1)//longest loop?
 		{
 			string line = content.substr(0, n);
 			line = TrimString(line);
-			if (line != "")
+			
+			if (line != ""){
 				vLine.push_back(line);
+				nRead++;
+			}
+			fprintf(stderr,"%d read\r",nRead);
 			content = content.substr(n + 1);
+			//content+=n;
 		}
-
+		//printf("Done parsing\n");
 		fclose(file);
 	}
 	else

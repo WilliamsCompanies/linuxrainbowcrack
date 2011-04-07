@@ -267,11 +267,13 @@ int main(int argc, char* argv[])
 
 		string sPathName = sInput;
 		vector<string> vLine;
+		printf("Starting to load hashes from file\n");
 		if (ReadLinesFromFile(sPathName, vLine))
 		{
 			int i;
 			for (i = 0; i < vLine.size(); i++)
 			{
+				//fprintf(stderr,"Processing hash number %d\r",i);
 				string sHash = vLine[i];
 				if (NormalizeHash(sHash))
 					vHash.push_back(sHash);
