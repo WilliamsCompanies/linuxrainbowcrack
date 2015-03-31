@@ -1,0 +1,1 @@
+This is a forkoff the project for the windows based rainbowcrack. It is forked off from v1.2. I plan to support distributed rainbow table generation and CUDA support. If you want to contribute contact kalgecin@gmail.com
